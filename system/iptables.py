@@ -211,6 +211,16 @@ options:
     description:
       - "Specifies the maximum average number of matches to allow per second. The number can specify units explicitly, using `/second', `/minute', `/hour' or `/day', or parts of them (so `5/second' is the same as `5/s')."
     required: false
+  source_range:
+    description:
+      - "Allow to use a range of IP addresses as source
+      A dash needs to be used between both addresses : 192.0.2.1-192.0.2.5"
+    required: false    
+  dest_range:
+    description:
+      - "Allow to use a range of IP addresses as destination
+      A dash needs to be used between both addresses : 192.0.2.1-192.0.2.5"
+    required: false  
 '''
 
 EXAMPLES = '''
@@ -246,12 +256,30 @@ def append_match(rule, param, match):
     if param:
         rule.extend(['-m', match])
 
+def append_source_range(rule, param):
+    if param:
+        rule.extend(['-m'])
+        rule.extend(['iprange'])
+
+def append_dest_range(rule, param):
+    if param:
+        rule.extend(['-m'])
+        rule.extend(['iprange'])
+
 
 def construct_rule(params):
     rule = []
     append_param(rule, params['protocol'], '-p', False)
-    append_param(rule, params['source'], '-s', False)
-    append_param(rule, params['destination'], '-d', False)
+    if not params['source_range']:
+        append_param(rule, params['source'], '-s', False)
+    else:
+        append_source_range(rule, params['source_range'])
+        append_param(rule, params['source_range'], '--src-range', False)    
+    if not params['dest_range']:
+        append_param(rule, params['destination'], '-d', False)
+    else:
+        append_dest_range(rule, params['dest_range'])
+        append_param(rule, params['dest_range'], '--dst-range', False) 
     append_param(rule, params['match'], '-m', True)
     append_param(rule, params['jump'], '-j', False)
     append_param(rule, params['goto'], '-g', False)
@@ -319,6 +347,9 @@ def main():
             comment=dict(required=False, default=None, type='str'),
             ctstate=dict(required=False, default=[], type='list'),
             limit=dict(required=False, default=None, type='str'),
+            source_range=dict(required=False, default=None, type='str'),
+            dest_range=dict(required=False, default=None, type='str'),
+
         ),
     )
     args = dict(
