@@ -211,6 +211,16 @@ options:
     description:
       - "Specifies the maximum average number of matches to allow per second. The number can specify units explicitly, using `/second', `/minute', `/hour' or `/day', or parts of them (so `5/second' is the same as `5/s')."
     required: false
+  source_range:
+    description:
+      - "Allow to use a range of IP addresses as source
+      A dash needs to be used between both addresses : 192.0.2.1-192.0.2.5"
+    required: false
+  destination_range:
+    description:
+      - "Allow to use a range of IP addresses as destination
+      A dash needs to be used between both addresses : 192.0.2.1-192.0.2.5"
+    required: false
 '''
 
 EXAMPLES = '''
@@ -268,6 +278,10 @@ def construct_rule(params):
     append_csv(rule, params['ctstate'], '--state')
     append_match(rule, params['limit'], 'limit')
     append_param(rule, params['limit'], '--limit', False)
+    append_match(rule, params['source_range'], 'iprange')
+    append_param(rule, params['source_range'], '--src-range', False)
+    append_match(rule, params['destination_range'], 'iprange')
+    append_param(rule, params['destination_range'], '--dst-range', False)
     return rule
 
 
@@ -319,6 +333,8 @@ def main():
             comment=dict(required=False, default=None, type='str'),
             ctstate=dict(required=False, default=[], type='list'),
             limit=dict(required=False, default=None, type='str'),
+            source_range=dict(required=False, default=None, type='str'),
+            destination_range=dict(required=False, default=None, type='str'),
         ),
     )
     args = dict(
@@ -334,6 +350,14 @@ def main():
     iptables_path = module.get_bin_path(BINS[ip_version], True)
     rule_is_present = check_present(iptables_path, module, module.params)
     should_be_present = (args['state'] == 'present')
+
+    #Check if we have both source and source_range
+    if module.params['source_range'] and module.params['source']:
+        module.fail_json(msg="Can't use source and source_range at the same time")
+
+    #Check if we have both destination and destination_range
+    if module.params['destination_range'] and module.params['destination']:
+        module.fail_json(msg="Can't use destination and destination_range at the same time")
 
     # Check if target is up to date
     args['changed'] = (rule_is_present != should_be_present)
