@@ -351,11 +351,11 @@ def main():
     rule_is_present = check_present(iptables_path, module, module.params)
     should_be_present = (args['state'] == 'present')
 
-    #Check if we have both source and source_range
+    # Check if we have both source and source_range
     if module.params['source_range'] and module.params['source']:
         module.fail_json(msg="Can't use source and source_range at the same time")
 
-    #Check if we have both destination and destination_range
+    # Check if we have both destination and destination_range
     if module.params['destination_range'] and module.params['destination']:
         module.fail_json(msg="Can't use destination and destination_range at the same time")
 
