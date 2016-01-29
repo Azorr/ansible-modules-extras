@@ -336,6 +336,7 @@ def main():
             source_range=dict(required=False, default=None, type='str'),
             destination_range=dict(required=False, default=None, type='str'),
         ),
+        mutually_exclusive=[['source', 'source_range'],['destination', 'destination_range']],
     )
     args = dict(
         changed=False,
@@ -350,14 +351,6 @@ def main():
     iptables_path = module.get_bin_path(BINS[ip_version], True)
     rule_is_present = check_present(iptables_path, module, module.params)
     should_be_present = (args['state'] == 'present')
-
-    # Check if we have both source and source_range
-    if module.params['source_range'] and module.params['source']:
-        module.fail_json(msg="Can't use source and source_range at the same time")
-
-    # Check if we have both destination and destination_range
-    if module.params['destination_range'] and module.params['destination']:
-        module.fail_json(msg="Can't use destination and destination_range at the same time")
 
     # Check if target is up to date
     args['changed'] = (rule_is_present != should_be_present)
